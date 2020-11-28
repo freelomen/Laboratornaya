@@ -5,30 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.Locale;
 import java.util.Scanner;
 
-final class SD {
-    private final double [][] s;
-    private final double [][] d;
-    private final boolean noun;
-
-    public SD(double [][] s, double [][] d, boolean noun) {
-        this.s = s;
-        this.d = d;
-        this.noun = noun;
-    }
-
-    public double [][] getS() {
-        return s;
-    }
-
-    public double [][] getD() {
-        return d;
-    }
-
-    public boolean getNoun() {
-        return noun;
-    }
-}
-
 public class Main {
     static Scanner scan = new Scanner(System.in);       // считывание с клавиатуры
 
@@ -41,6 +17,8 @@ public class Main {
         init();     // первый ввод
         menu();     // вызов меню
     }
+
+
 
     // инициализация вектора и матрицы
     public static void init() throws FileNotFoundException {
@@ -64,6 +42,8 @@ public class Main {
             }
         }
     }
+
+
 
     // ручной ввод
     public static void manual_init() {
@@ -116,6 +96,8 @@ public class Main {
         print_vector(b);
     }
 
+
+
     // печать матрицы
     public static void print_matrix(double [][] a) {
         for (int i = 1; i <= size; i++){
@@ -134,22 +116,6 @@ public class Main {
         }
     }
 
-    // печать столбца
-    public static void print_stolb(double [][] a) {
-        for (int i = 1; i <= size; i++){
-            System.out.print("| ");
-            if (a[i][1] >= 0){
-                System.out.print(" ");
-                System.out.printf("%.2f", a[i][1]);
-                System.out.print(" ");
-            } else{
-                System.out.printf("%.2f", a[i][1]);
-                System.out.print(" ");
-            }
-            System.out.println(" |");
-        }
-    }
-
     // печать вектора
     public static void print_vector(double [] b) {
         System.out.print("| ");
@@ -160,6 +126,8 @@ public class Main {
         System.out.print("|");
         System.out.println();
     }
+
+
 
     // меню
     public static void menu() throws FileNotFoundException {
@@ -179,12 +147,12 @@ public class Main {
             switch (scan.nextInt()) {
                 case 1: {
                     System.out.println();
-                    norm_matrix();
+                    norm_matrix(a);
                     break;
                 }
                 case 2: {
                     System.out.println();
-                    norm_vector();
+                    norm_vector(b);
                     break;
                 }
                 case 3: {
@@ -222,8 +190,10 @@ public class Main {
         }
     }
 
+
+
     // печать норм матриц
-    public static void norm_matrix() {
+    public static void norm_matrix(double [][] a) {
         System.out.println("1. Нормы матрицы A");
         System.out.println();
 
@@ -241,13 +211,13 @@ public class Main {
     }
 
     // первая норма матрицы
-    public static double norm_matrix_first(double [][] c) {
+    public static double norm_matrix_first(double [][] a) {
         double norm = 0;
 
         for (int j = 1; j <= size; j++){
             double temp = 0;
             for (int i = 1; i <= size; i++){
-                temp += Math.abs(c[i][j]);
+                temp += Math.abs(a[i][j]);
             }
             if (temp > norm){
                 norm = temp;
@@ -305,8 +275,10 @@ public class Main {
         return norm;
     }
 
+
+
     // печать норм вектора
-    public static void norm_vector() {
+    public static void norm_vector(double [] b) {
         System.out.println("2. Нормы вектора b");
         System.out.println();
 
@@ -359,15 +331,19 @@ public class Main {
         return norm;
     }
 
-    // печать S*DS метода
+
+
+    // печать S*DS разложения
     public static void sds(double [][] a) {
         System.out.println("3. Разложение матрицы A (S*DS)");
         System.out.println();
 
         if (check_mirror_matrix(a) == 1){
-            SD result = getSD(a);
+            boolean noun = true;
+            double [][] d = new double[size + 1][size + 1];
+            double [][] s = new double[size + 1][size + 1];
 
-            if (result.getNoun()) {
+            if (sds(a, d, s, noun)) {
                 System.out.println("Из матрицы А:");
                 print_matrix(a);
 
@@ -376,18 +352,18 @@ public class Main {
                 System.out.println("Получим такие матрицы S, D, S*:");
 
                 System.out.println("S:");
-                print_matrix(result.getS());
+                print_matrix(s);
 
                 System.out.println("D:");
-                print_matrix(result.getD());
+                print_matrix(d);
 
                 System.out.println("S*:");
-                print_matrix(trans_matrix(result.getS()));
+                print_matrix(trans_matrix(s));
 
                 System.out.println();
 
                 System.out.println("Перемножим их:");
-                print_matrix(multiply_matrix(multiply_matrix(trans_matrix(result.getS()), result.getD()), result.getS()));
+                print_matrix(multiply_matrix(multiply_matrix(trans_matrix(s), d), s));
             }
             else
                 System.out.println("Матрица вырожденная, введите другую");
@@ -396,30 +372,12 @@ public class Main {
             System.out.println("Матрица не симметричная, введите другую");
     }
 
-    // проверка симметричности
-    public static int check_mirror_matrix(double [][] a) {
-        int check = 1;
-
-        for (int i = 1; i <= size; i++)
-            for (int j = 1; j <= size; j++)
-                if (a[i][j] != a[j][i]) {
-                    check = 0;
-                    break;
-                }
-
-        return check;
-    }
-
-    // разложение SD
-    public static SD getSD(double [][] a) {
-        boolean noun = true;
-
-        double [][] d = new double[size + 1][size + 1];
+    // реализация S*DS разложения
+    public static boolean sds(double [][] a, double [][] d, double [][] s, boolean noun) {
         for (int i = 1; i <= size; i++)
             for (int j = 1; j <= size; j++)
                 d[i][j] = 0;
 
-        double [][] s = new double[size + 1][size + 1];
         d[1][1] = Math.signum(a[1][1]);
         s[1][1] = Math.sqrt(Math.abs(a[1][1]));
 
@@ -428,7 +386,7 @@ public class Main {
                 s[1][j] = a[1][j] / (s[1][1] * d[1][1]);
             else {
                 noun = false;
-                return new SD(s, d, noun);
+                return noun;
             }
         }
 
@@ -453,26 +411,16 @@ public class Main {
             }
             else {
                 noun = false;
-                return new SD(s, d, noun);
+                return noun;
             }
         }
 
-        return new SD(s, d, noun);
+        return noun;
     }
 
-    // транспонирование
-    public static double[][] trans_matrix(double [][] matrix) {
-        double [][] _matrix = new double[size + 1][size + 1];
-        for (int i = 1; i <= size; i++){
-            for (int j = 1; j <= size; j++){
-                _matrix[i][j] = matrix[j][i];
-            }
-        }
 
-        return _matrix;
-    }
 
-    // печать detSD
+    // печать определителя методом S*SD
     public static void det(double [][] a) {
         System.out.println("4. Определитель матрицы |A| на основе разложения");
         System.out.println();
@@ -486,12 +434,13 @@ public class Main {
             System.out.println("Матрица не симметричная, введите другую");
     }
 
-    // нахождение detSD
+    // реализация определителя методом S*SD
     public static double det_sds(double [][] a) {
+        boolean noun = true;
+        double [][] d = new double[size + 1][size + 1];
+        double [][] s = new double[size + 1][size + 1];
 
-        SD result = getSD(a);
-        double [][] s = result.getS();
-        double [][] d = result.getD();
+        sds(a, d, s, noun);
 
         double det = 1;
         for (int i = 1; i <= size; i++)
@@ -500,17 +449,27 @@ public class Main {
         return det;
     }
 
+
+
     // печать метода Якоби
     public static void print_jacob(double [][] a, double [] b) {
         System.out.println("5. Решение СЛАУ вида Ax = b (Метод Якоби)");
         System.out.println();
 
-        System.out.println("Получим вектор X: ");
-        print_vector(jacob(a, b));
+        boolean noun = true;
+        double [] result = new double[size + 1];
+
+        if (jacob(a, b, result, noun)) {
+            System.out.println("Получим вектор X: ");
+            print_vector(result);
+        }
+        else {
+            System.out.println("Условие сходимости не выполняется");
+        }
     }
 
     // реализация метода Якоби
-    public static double [] jacob(double [][] a, double [] b) {
+    public static boolean jacob(double [][] a, double [] b, double [] result, boolean noun) {
         double [][] a1 = new double[size + 1][size + 1];
         double [][] a2 = new double[size + 1][size + 1];
         double [][] d = new double[size + 1][size + 1];
@@ -531,32 +490,63 @@ public class Main {
             }
         double [][] d_reverse = reverse_matrix(d);
 
-        double [][] B = new double[size + 1][size + 1];
-        B = multiply_matrix(multiply_matrix_int(d_reverse, -1), add_matrix(a1, a2));
+        // Приведение к итерационному виду В
+        double [][] B = multiply_matrix(multiply_matrix_int(d_reverse, -1), add_matrix(a1, a2));
 
         double [][] f = new double[size + 1][size + 1];
         for (int i = 1; i <= size; i++)
             for (int j = 1; j <= size; j++)
                 f[i][1] = b[i];
         f = (multiply_matrix(d_reverse, f));
-
         double [][] x1 = f;
-
         double [][] x = add_matrix(multiply_matrix(B, x1), f);
 
-        while (norm_matrix_second(sub_matrix(x, x1)) > 0.001) {
-            if (norm_matrix_second(B) < 1) {
+        // Условие сходимости
+        if (norm_matrix_second(B) < 1) {
+            // Условие остановки
+            while (norm_matrix_second(sub_matrix(x, x1)) >= 0.001) {
                 x1 = x;
                 x = add_matrix(multiply_matrix(B, x), f);
             }
         }
+        else {
+            noun = false;
+            return noun;
+        }
 
-        double [] result = new double[size + 1];
         for (int i = 1; i <= size; i++)
             for (int j = 1; j <= size; j++)
                 result[i] = x[i][1];
 
-        return result;
+        return noun;
+    }
+
+
+
+    // проверка симметричности
+    public static int check_mirror_matrix(double [][] a) {
+        int check = 1;
+
+        for (int i = 1; i <= size; i++)
+            for (int j = 1; j <= size; j++)
+                if (a[i][j] != a[j][i]) {
+                    check = 0;
+                    break;
+                }
+
+        return check;
+    }
+
+    // транспонирование
+    public static double[][] trans_matrix(double [][] matrix) {
+        double [][] _matrix = new double[size + 1][size + 1];
+        for (int i = 1; i <= size; i++){
+            for (int j = 1; j <= size; j++){
+                _matrix[i][j] = matrix[j][i];
+            }
+        }
+
+        return _matrix;
     }
 
     // обратная матрица
