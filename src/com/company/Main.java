@@ -8,6 +8,7 @@ import java.util.Scanner;
 public class Main {
     static Scanner scan = new Scanner(System.in);       // считывание с клавиатуры
 
+    static double eps = 0.001;  // точность
     static int size;            // размерность
     static double [] b;         // вектор
     static double [][] a;       // матрица
@@ -456,20 +457,18 @@ public class Main {
         System.out.println("5. Решение СЛАУ вида Ax = b (Метод Якоби)");
         System.out.println();
 
-        boolean noun = true;
         double [] result = new double[size + 1];
 
-        if (jacob(a, b, result, noun)) {
+        if (jacob(a, b, result)) {
             System.out.println("Получим вектор X: ");
             print_vector(result);
         }
-        else {
-            System.out.println("Условие сходимости не выполняется");
-        }
+        else
+            System.out.println("Решения нет!");
     }
 
     // реализация метода Якоби
-    public static boolean jacob(double [][] a, double [] b, double [] result, boolean noun) {
+    public static boolean jacob(double [][] a, double [] b, double [] result) {
         double [][] a1 = new double[size + 1][size + 1];
         double [][] a2 = new double[size + 1][size + 1];
         double [][] d = new double[size + 1][size + 1];
@@ -488,7 +487,14 @@ public class Main {
                 else
                     d[i][j] = 0;
             }
-        double [][] d_reverse = reverse_matrix(d);
+
+        // обратная диагональная
+        double [][] d_reverse = new double[size + 1][size + 1];
+        for (int i = 1; i <= size; i++)
+            if (d[i][i] != 0)
+                d_reverse[i][i] = 1 / d[i][i];
+            else
+                return false;
 
         // Приведение к итерационному виду В
         double [][] B = multiply_matrix(multiply_matrix_int(d_reverse, -1), add_matrix(a1, a2));
@@ -498,27 +504,27 @@ public class Main {
             for (int j = 1; j <= size; j++)
                 f[i][1] = b[i];
         f = (multiply_matrix(d_reverse, f));
+
         double [][] x1 = f;
+
         double [][] x = add_matrix(multiply_matrix(B, x1), f);
 
         // Условие сходимости
         if (norm_matrix_second(B) < 1) {
             // Условие остановки
-            while (norm_matrix_second(sub_matrix(x, x1)) >= 0.001) {
+            while (norm_matrix_second(sub_matrix(x, x1)) >= eps) {
                 x1 = x;
                 x = add_matrix(multiply_matrix(B, x), f);
             }
         }
-        else {
-            noun = false;
-            return noun;
-        }
+        else
+            return false;
 
         for (int i = 1; i <= size; i++)
             for (int j = 1; j <= size; j++)
                 result[i] = x[i][1];
 
-        return noun;
+        return true;
     }
 
 
